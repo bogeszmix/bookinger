@@ -8,7 +8,7 @@ const routes: Routes = [
         path: 'tabs',
         component: PlacesPage,
         children: [
-            { 
+            {
                 path: 'discover',
                 children: [
                     { path: '', loadChildren: './discover/discover.module#DiscoverPageModule' },
