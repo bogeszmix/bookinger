@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { NavController } from '@ionic/angular';
+import { ActivatedRoute } from '@angular/router';
+import { NavController, ModalController } from '@ionic/angular';
+import { CreateBookingComponent } from 'src/app/pages/bookings/create-booking/create-booking.component';
+import { Place } from 'src/app/models/place.model';
+import { PlacesService } from 'src/app/services/places/places.service';
 
 @Component({
   selector: 'app-place-detail',
@@ -8,21 +11,47 @@ import { NavController } from '@ionic/angular';
   styleUrls: ['./place-detail.page.scss'],
 })
 export class PlaceDetailPage implements OnInit {
+  place: Place;
 
   constructor(
-    private router: Router,
-    private navCtrl: NavController) { }
+    private route: ActivatedRoute,
+    private navCtrl: NavController,
+    private modalCtrl: ModalController,
+    private placesService: PlacesService) { }
 
   ngOnInit() {
+    this.route.paramMap.subscribe(paramMap => {
+      if (!paramMap.has('placeId')) {
+        this.navCtrl.navigateBack('/places/tabs/discover');
+        return;
+      }
+      this.place = this.placesService.getPlace(paramMap.get('placeId'));
+    });
   }
 
   onBookPlace() {
     // Ebben az esetben ha üres a nav stack, mindig forward-os animációt fog alkalmazni
     // De ha van a stackban akkor is ezt csinálja, ez egy bug állítólag.
-    //this.router.navigateByUrl('places/tabs/discover');
+    // this.router.navigateByUrl('places/tabs/discover');
 
     // NavController használatával, mi magunk adhatjuk meg, hogy milyen animációt alkalmazzon
     // Így ha üres is a stack, nem fog az előfordulni, hogy előrefele mutató animációt alkalmaz
-    this.navCtrl.navigateBack('places/tabs/discover');
+    // this.navCtrl.navigateBack('places/tabs/discover');
+    this.modalCtrl.create({
+      component: CreateBookingComponent,
+      componentProps: {
+        selectedPlace: this.place
+      }
+    }).then(modalELe => {
+      modalELe.present();
+      return modalELe.onDidDismiss();
+    }).then(resultData => {
+      console.log(resultData.data);
+      console.log(resultData.role);
+
+      if (resultData.role === 'confirm') {
+        console.log('BOOKED!');
+      }
+    });
   }
 }
