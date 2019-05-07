@@ -29,10 +29,10 @@ export class PlacesService {
   constructor() {}
 
   get places() {
-    return [...this._places]
+    return [...this._places];
   }
 
   getPlace(id: string) {
     return {...this._places.find(p => p.id === id)};
-  } 
+  }
 }
