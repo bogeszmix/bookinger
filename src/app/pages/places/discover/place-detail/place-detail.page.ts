@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NavController, ModalController } from '@ionic/angular';
+import { NavController, ModalController, ActionSheetController } from '@ionic/angular';
 import { CreateBookingComponent } from 'src/app/pages/bookings/create-booking/create-booking.component';
 import { Place } from 'src/app/models/place.model';
 import { PlacesService } from 'src/app/services/places/places.service';
@@ -17,7 +17,8 @@ export class PlaceDetailPage implements OnInit {
     private route: ActivatedRoute,
     private navCtrl: NavController,
     private modalCtrl: ModalController,
-    private placesService: PlacesService) { }
+    private placesService: PlacesService,
+    private actionSheet: ActionSheetController) { }
 
   ngOnInit() {
     this.route.paramMap.subscribe(paramMap => {
@@ -30,6 +31,34 @@ export class PlaceDetailPage implements OnInit {
   }
 
   onBookPlace() {
+    this.actionSheet.create(
+      {
+        header: 'Choose an Action',
+        buttons: [
+          {
+            text: 'Select Date',
+            handler: () => {
+              this.openBookingModal('select')
+            }
+          },
+          {
+            text: 'Random Date',
+            handler: () => {
+              this.openBookingModal('random')
+            }
+          },
+          {
+            text: 'Cancel',
+            role: 'cancel'
+          }
+        ]
+      }).then(actionSheetEl => {
+        actionSheetEl.present();
+      });
+  }
+
+  openBookingModal(mode: 'select' | 'random') {
+    console.log(mode);
     // Ebben az esetben ha üres a nav stack, mindig forward-os animációt fog alkalmazni
     // De ha van a stackban akkor is ezt csinálja, ez egy bug állítólag.
     // this.router.navigateByUrl('places/tabs/discover');
@@ -52,6 +81,8 @@ export class PlaceDetailPage implements OnInit {
       if (resultData.role === 'confirm') {
         console.log('BOOKED!');
       }
+
     });
+    
   }
 }
