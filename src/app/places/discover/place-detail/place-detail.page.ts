@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   NavController,
@@ -9,13 +9,15 @@ import {
 import { PlacesService } from '../../places.service';
 import { Place } from '../../place.model';
 import { CreateBookingComponent } from '../../../bookings/create-booking/create-booking.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-place-detail',
   templateUrl: './place-detail.page.html',
   styleUrls: ['./place-detail.page.scss']
 })
-export class PlaceDetailPage implements OnInit {
+export class PlaceDetailPage implements OnInit, OnDestroy {
+  private _placeSubs: Subscription;
   place: Place;
 
   constructor(
@@ -32,8 +34,16 @@ export class PlaceDetailPage implements OnInit {
         this.navCtrl.navigateBack('/places/tabs/discover');
         return;
       }
-      this.place = this.placesService.getPlace(paramMap.get('placeId'));
+      this._placeSubs = this.placesService.getPlace(paramMap.get('placeId')).subscribe( (place: Place) => {
+        this.place = place;
+      });
     });
+  }
+
+  ngOnDestroy() {
+    if (this._placeSubs) {
+      this._placeSubs.unsubscribe();
+    }
   }
 
   onBookPlace() {

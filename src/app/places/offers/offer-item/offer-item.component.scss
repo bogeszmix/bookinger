@@ -1,5 +1,5 @@
 h1 {
-  font-size: 18px;
+  font-size: large;
   border: 1px solid var(--ion-color-primary);
   padding: 8px;
   border-radius: 5px;
@@ -9,6 +9,7 @@ h1 {
 .offer-details {
   display: flex;
   align-items: center;
+  font-size: small;
 
   .space-left {
     margin-left: 5px;
