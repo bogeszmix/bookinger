@@ -1,25 +1,50 @@
-import { Component, OnInit } from '@angular/core';
-import { IonItemSliding } from '@ionic/angular';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { IonItemSliding, LoadingController } from '@ionic/angular';
 
 import { BookingService } from './booking.service';
 import { Booking } from './booking.model';
+import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-bookings',
-  templateUrl: './bookings.page.html',
-  styleUrls: ['./bookings.page.scss'],
+    selector: 'app-bookings',
+    templateUrl: './bookings.page.html',
+    styleUrls: ['./bookings.page.scss']
 })
-export class BookingsPage implements OnInit {
-  loadedBookings: Booking[];
+export class BookingsPage implements OnInit, OnDestroy {
+    private _bookingsSubj: Subscription;
+    loadedBookings: Booking[];
 
-  constructor(private bookingService: BookingService) { }
+    constructor(
+        private bookingService: BookingService,
+        private loadingCtrl: LoadingController
+    ) {}
 
-  ngOnInit() {
-    this.loadedBookings = this.bookingService.bookings;
-  }
+    ngOnInit() {
+        this._bookingsSubj = this.bookingService.bookings.subscribe(
+            (bookings: Booking[]) => {
+                this.loadedBookings = bookings;
+            }
+        );
+    }
 
-  onCancelBooking(offerId: string, slidingEl: IonItemSliding) {
-    slidingEl.close();
-    // cancel booking wiht id offerId
-  }
+    ngOnDestroy() {
+        if (this._bookingsSubj) {
+            this._bookingsSubj.unsubscribe();
+        }
+    }
+
+    onCancelBooking(bookingId: string, slidingEl: IonItemSliding) {
+        slidingEl.close();
+        this.loadingCtrl
+            .create({
+                message: 'Cancelling...'
+            })
+            .then(loadingEL => {
+                loadingEL.present();
+                this.bookingService.cancelBooking(bookingId).subscribe(() => {
+                    loadingEL.dismiss();
+                });
+            });
+        // cancel booking wiht id offerId
+    }
 }
