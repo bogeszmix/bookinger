@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Place } from './place.model';
 import { AuthService } from '../auth/auth.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { take, map, tap, delay, switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 
@@ -30,10 +30,18 @@ export class PlacesService {
     constructor(private authService: AuthService, private http: HttpClient) {}
 
     getPlace(id: string) {
-        return this._places.pipe(
-            take(1),
-            map((places: Place[]) => {
-                return { ...places.find(p => p.id === id) };
+        return this.http.get<PlaceData>(`${this._BASE_DB_URL}/offered-places/${id}.json`).pipe(
+            map(resData => {
+                return new Place(
+                    id,
+                    resData.title,
+                    resData.description,
+                    resData.imageUrl,
+                    resData.price,
+                    new Date(resData.availableFrom),
+                    new Date(resData.availableTo),
+                    resData.userId
+                )
             })
         );
     }
@@ -116,14 +124,22 @@ export class PlacesService {
     }
 
     updatePlace(placeId: string, title: string, description: string) {
+        let updatedPlaces: Place[];
+
         return this.places.pipe(
             take(1),
-            delay(1000),
-            tap(places => {
+            switchMap( places => {
+                if (!places ||places.length <= 0) {
+                    return this.fetchPlaces();
+                } else {
+                    return of(places);
+                }
+            }),
+            switchMap( places => {
                 const updatedPlaceIndex = places.findIndex(
                     pl => pl.id === placeId
                 );
-                const updatedPlaces = [...places];
+                updatedPlaces = [...places];
                 const old = updatedPlaces[updatedPlaceIndex];
                 updatedPlaces[updatedPlaceIndex] = new Place(
                     old.id,
@@ -134,10 +150,16 @@ export class PlacesService {
                     old.availableFrom,
                     old.availableTo,
                     old.userId
+            );
+            return this.http.put(
+                `${this._BASE_DB_URL}/offered-places/${placeId}.json`,
+                { ...updatedPlaces[updatedPlaceIndex], id: null}
                 );
-
+            }),
+            tap(() => {
                 this._places.next(updatedPlaces);
             })
         );
+        
     }
 }

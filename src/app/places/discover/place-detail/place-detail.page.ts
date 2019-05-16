@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
     NavController,
     ModalController,
     ActionSheetController,
-    LoadingController
+    LoadingController,
+    AlertController
 } from '@ionic/angular';
 
 import { PlacesService } from '../../places.service';
@@ -22,33 +23,56 @@ import { AuthService } from 'src/app/auth/auth.service';
 export class PlaceDetailPage implements OnInit, OnDestroy {
     private _placeSubs: Subscription;
     isBookable = false;
+    isLoading = false;
     place: Place;
 
     constructor(
         private navCtrl: NavController,
         private route: ActivatedRoute,
+        private router: Router,
         private placesService: PlacesService,
         private modalCtrl: ModalController,
         private actionSheetCtrl: ActionSheetController,
         private bookingService: BookingService,
         private loadingCtrl: LoadingController,
-        private authService: AuthService
+        private authService: AuthService,
+        private alertCtrl: AlertController
     ) {}
 
     ngOnInit() {
         this.route.paramMap.subscribe(paramMap => {
-            if (!paramMap.has('placeId')) {
-                this.navCtrl.navigateBack('/places/tabs/discover');
-                return;
-            }
-            this._placeSubs = this.placesService
-                .getPlace(paramMap.get('placeId'))
-                .subscribe((place: Place) => {
-                    this.place = place;
-                    this.isBookable = place.userId !== this.authService.userId;
-                });
+          if (!paramMap.has('placeId')) {
+            this.navCtrl.navigateBack('/places/tabs/discover');
+            return;
+          }
+          this.isLoading = true;
+          this._placeSubs = this.placesService
+            .getPlace(paramMap.get('placeId'))
+            .subscribe(
+              place => {
+                this.place = place;
+                this.isBookable = place.userId !== this.authService.userId;
+                this.isLoading = false;
+              },
+              error => {
+                this.alertCtrl
+                  .create({
+                    header: 'An error ocurred!',
+                    message: 'Could not load place.',
+                    buttons: [
+                      {
+                        text: 'Okay',
+                        handler: () => {
+                          this.router.navigate(['/places/tabs/discover']);
+                        }
+                      }
+                    ]
+                  })
+                  .then(alertEl => alertEl.present());
+              }
+            );
         });
-    }
+      }
 
     ngOnDestroy() {
         if (this._placeSubs) {
