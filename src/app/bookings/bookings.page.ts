@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 export class BookingsPage implements OnInit, OnDestroy {
     private _bookingsSubj: Subscription;
     loadedBookings: Booking[];
+    isLoading = false;
 
     constructor(
         private bookingService: BookingService,
@@ -31,6 +32,13 @@ export class BookingsPage implements OnInit, OnDestroy {
         if (this._bookingsSubj) {
             this._bookingsSubj.unsubscribe();
         }
+    }
+
+    ionViewWillEnter() {
+        this.isLoading = true;
+        this.bookingService.fetchBookings().subscribe( () => {
+            this.isLoading = false;
+        });
     }
 
     onCancelBooking(bookingId: string, slidingEl: IonItemSliding) {
