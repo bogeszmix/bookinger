@@ -1,165 +1,209 @@
 import { Injectable } from '@angular/core';
-import { Place } from './place.model';
-import { AuthService } from '../auth/auth.service';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, of } from 'rxjs';
 import { take, map, tap, delay, switchMap } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
+
+import { Place } from './place.model';
+import { AuthService } from '../auth/auth.service';
+import { PlaceLocation } from './location.model';
+
+// [
+//   new Place(
+//     'p1',
+//     'Manhattan Mansion',
+//     'In the heart of New York City.',
+//     'https://lonelyplanetimages.imgix.net/mastheads/GettyImages-538096543_medium.jpg?sharp=10&vib=20&w=1200',
+//     149.99,
+//     new Date('2019-01-01'),
+//     new Date('2019-12-31'),
+//     'abc'
+//   ),
+//   new Place(
+//     'p2',
+//     "L'Amour Toujours",
+//     'A romantic place in Paris!',
+//     'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Paris_Night.jpg/1024px-Paris_Night.jpg',
+//     189.99,
+//     new Date('2019-01-01'),
+//     new Date('2019-12-31'),
+//     'abc'
+//   ),
+//   new Place(
+//     'p3',
+//     'The Foggy Palace',
+//     'Not your average city trip!',
+//     'https://upload.wikimedia.org/wikipedia/commons/0/01/San_Francisco_with_two_bridges_and_the_fog.jpg',
+//     99.99,
+//     new Date('2019-01-01'),
+//     new Date('2019-12-31'),
+//     'abc'
+//   )
+// ]
 
 interface PlaceData {
-    availableFrom: Date;
-    availableTo: Date;
-    description: string;
-    imageUrl: string;
-    price: number;
-    title: string;
-    userId: string;
+  availableFrom: string;
+  availableTo: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  title: string;
+  userId: string;
+  location: PlaceLocation;
 }
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class PlacesService {
-    private _BASE_DB_URL = 'https://bookinger-ionic-tutorial.firebaseio.com/';
+  private _BASE_DB_URL = 'https://bookinger-ionic-tutorial.firebaseio.com/';
 
-    private _places = new BehaviorSubject<Place[]>([]);
+  private _places = new BehaviorSubject<Place[]>([]);
 
-    get places() {
-        return this._places.asObservable();
-    }
+  get places() {
+    return this._places.asObservable();
+  }
 
-    constructor(private authService: AuthService, private http: HttpClient) {}
+  constructor(private authService: AuthService, private http: HttpClient) {}
 
-    getPlace(id: string) {
-        return this.http.get<PlaceData>(`${this._BASE_DB_URL}/offered-places/${id}.json`).pipe(
-            map(resData => {
-                return new Place(
-                    id,
-                    resData.title,
-                    resData.description,
-                    resData.imageUrl,
-                    resData.price,
-                    new Date(resData.availableFrom),
-                    new Date(resData.availableTo),
-                    resData.userId
+  fetchPlaces() {
+    return this.http
+      .get<{ [key: string]: PlaceData }>(
+        this._BASE_DB_URL + 'offered-places.json'
+      )
+      .pipe(
+        map(resData => {
+          const places = [];
+          for (const key in resData) {
+            if (resData.hasOwnProperty(key)) {
+              places.push(
+                new Place(
+                  key,
+                  resData[key].title,
+                  resData[key].description,
+                  resData[key].imageUrl,
+                  resData[key].price,
+                  new Date(resData[key].availableFrom),
+                  new Date(resData[key].availableTo),
+                  resData[key].userId,
+                  resData[key].location
                 )
-            })
+              );
+            }
+          }
+          return places;
+          // return [];
+        }),
+        tap(places => {
+          this._places.next(places);
+        })
+      );
+  }
+
+  getPlace(id: string) {
+    return this.http
+      .get<PlaceData>(
+        this._BASE_DB_URL + 'offered-places/' + id + '.json'
+      )
+      .pipe(
+        map(placeData => {
+          return new Place(
+            id,
+            placeData.title,
+            placeData.description,
+            placeData.imageUrl,
+            placeData.price,
+            new Date(placeData.availableFrom),
+            new Date(placeData.availableTo),
+            placeData.userId,
+            placeData.location
+          );
+        })
+      );
+  }
+
+  addPlace(
+    title: string,
+    description: string,
+    price: number,
+    dateFrom: Date,
+    dateTo: Date,
+    location: PlaceLocation
+  ) {
+    let generatedId: string;
+    const newPlace = new Place(
+      Math.random().toString(),
+      title,
+      description,
+      'https://lonelyplanetimages.imgix.net/mastheads/GettyImages-538096543_medium.jpg?sharp=10&vib=20&w=1200',
+      price,
+      dateFrom,
+      dateTo,
+      this.authService.userId,
+      location
+    );
+    return this.http
+      .post<{ name: string }>(
+        this._BASE_DB_URL + 'offered-places.json',
+        {
+          ...newPlace,
+          id: null
+        }
+      )
+      .pipe(
+        switchMap(resData => {
+          generatedId = resData.name;
+          return this.places;
+        }),
+        take(1),
+        tap(places => {
+          newPlace.id = generatedId;
+          this._places.next(places.concat(newPlace));
+        })
+      );
+    // return this.places.pipe(
+    //   take(1),
+    //   delay(1000),
+    //   tap(places => {
+    //     this._places.next(places.concat(newPlace));
+    //   })
+    // );
+  }
+
+  updatePlace(placeId: string, title: string, description: string) {
+    let updatedPlaces: Place[];
+    return this.places.pipe(
+      take(1),
+      switchMap(places => {
+        if (!places || places.length <= 0) {
+          return this.fetchPlaces();
+        } else {
+          return of(places);
+        }
+      }),
+      switchMap(places => {
+        const updatedPlaceIndex = places.findIndex(pl => pl.id === placeId);
+        updatedPlaces = [...places];
+        const oldPlace = updatedPlaces[updatedPlaceIndex];
+        updatedPlaces[updatedPlaceIndex] = new Place(
+          oldPlace.id,
+          title,
+          description,
+          oldPlace.imageUrl,
+          oldPlace.price,
+          oldPlace.availableFrom,
+          oldPlace.availableTo,
+          oldPlace.userId,
+          oldPlace.location
         );
-    }
-
-    fetchPlaces() {
-        return this.http
-            .get<{ [key: string]: PlaceData }>(
-                this._BASE_DB_URL + 'offered-places.json'
-            )
-            .pipe(
-                map(resData => {
-                    const places = [];
-                    for (const key in resData) {
-                        if (resData.hasOwnProperty(key)) {
-                            places.push(
-                                new Place(
-                                    key,
-                                    resData[key].title,
-                                    resData[key].description,
-                                    resData[key].imageUrl,
-                                    resData[key].price,
-                                    new Date(resData[key].availableFrom),
-                                    new Date(resData[key].availableTo),
-                                    resData[key].userId
-                                )
-                            );
-                        }
-                    }
-                    return places;
-                }),
-                tap(places => {
-                    this._places.next(places);
-                })
-            );
-    }
-
-    addPlace(
-        title: string,
-        description: string,
-        price: number,
-        dateFrom: Date,
-        dateTo: Date
-    ) {
-        let generatedId: string;
-        const newPlace = new Place(
-            Math.random().toString(),
-            title,
-            description,
-            'https://upload.wikimedia.org/wikipedia/commons/0/01/San_Francisco_with_two_bridges_and_the_fog.jpg',
-            price,
-            dateFrom,
-            dateTo,
-            this.authService.userId
+        return this.http.put(
+          this._BASE_DB_URL + 'offered-places/' + placeId + '.json'
+          ,
+          { ...updatedPlaces[updatedPlaceIndex], id: null }
         );
-
-        return this.http
-            .post<{ name: string }>(this._BASE_DB_URL + 'offered-places.json', {
-                ...newPlace,
-                id: null
-            })
-            .pipe(
-                switchMap(resData => {
-                    generatedId = resData.name;
-                    return this._places;
-                }),
-                take(1),
-                tap(places => {
-                    newPlace.id = generatedId;
-                    this._places.next(places.concat(newPlace));
-                })
-            );
-
-        /* return this._places.pipe(
-            take(1),
-            delay(1000),
-            tap((places: Place[]) => {
-                this._places.next(places.concat(newPlace));
-            })
-        ); */
-    }
-
-    updatePlace(placeId: string, title: string, description: string) {
-        let updatedPlaces: Place[];
-
-        return this.places.pipe(
-            take(1),
-            switchMap( places => {
-                if (!places ||places.length <= 0) {
-                    return this.fetchPlaces();
-                } else {
-                    return of(places);
-                }
-            }),
-            switchMap( places => {
-                const updatedPlaceIndex = places.findIndex(
-                    pl => pl.id === placeId
-                );
-                updatedPlaces = [...places];
-                const old = updatedPlaces[updatedPlaceIndex];
-                updatedPlaces[updatedPlaceIndex] = new Place(
-                    old.id,
-                    title,
-                    description,
-                    old.imageUrl,
-                    old.price,
-                    old.availableFrom,
-                    old.availableTo,
-                    old.userId
-            );
-            return this.http.put(
-                `${this._BASE_DB_URL}/offered-places/${placeId}.json`,
-                { ...updatedPlaces[updatedPlaceIndex], id: null}
-                );
-            }),
-            tap(() => {
-                this._places.next(updatedPlaces);
-            })
-        );
-        
-    }
+      }),
+      tap(() => {
+        this._places.next(updatedPlaces);
+      })
+    );
+  }
 }

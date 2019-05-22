@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { PlacesService } from '../../places.service';
 import { Router } from '@angular/router';
 import { LoadingController } from '@ionic/angular';
+
+import { PlacesService } from '../../places.service';
+import { PlaceLocation } from '../../location.model';
 
 @Component({
   selector: 'app-new-offer',
@@ -15,7 +17,8 @@ export class NewOfferPage implements OnInit {
   constructor(
     private placesService: PlacesService,
     private router: Router,
-    private loadingCtrl: LoadingController) {}
+    private loadingCtrl: LoadingController
+  ) {}
 
   ngOnInit() {
     this.form = new FormGroup({
@@ -38,32 +41,39 @@ export class NewOfferPage implements OnInit {
       dateTo: new FormControl(null, {
         updateOn: 'blur',
         validators: [Validators.required]
-      })
+      }),
+      location: new FormControl(null, { validators: [Validators.required] })
     });
+  }
+
+  onLocationPicked(location: PlaceLocation) {
+    this.form.patchValue({ location: location });
   }
 
   onCreateOffer() {
     if (!this.form.valid) {
       return;
     }
-    this.loadingCtrl.create({
-      message: 'Creating place...'
-    }).then(loadingEl => {
-      loadingEl.present();
-
-      console.log(this.form);
-      this.placesService.addPlace(
-        this.form.value.title,
-        this.form.value.description,
-        this.form.value.price,
-        new Date(this.form.value.dateFrom),
-        new Date(this.form.value.dateTo)
-    ).subscribe( () => {
-      loadingEl.dismiss();
-      this.form.reset();
-      this.router.navigate(['/places/tabs/offers']);
-    });
-    });
-
+    this.loadingCtrl
+      .create({
+        message: 'Creating place...'
+      })
+      .then(loadingEl => {
+        loadingEl.present();
+        this.placesService
+          .addPlace(
+            this.form.value.title,
+            this.form.value.description,
+            +this.form.value.price,
+            new Date(this.form.value.dateFrom),
+            new Date(this.form.value.dateTo),
+            this.form.value.location
+          )
+          .subscribe(() => {
+            loadingEl.dismiss();
+            this.form.reset();
+            this.router.navigate(['/places/tabs/offers']);
+          });
+      });
   }
 }

@@ -1,66 +1,67 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MenuController } from '@ionic/angular';
 import { SegmentChangeEventDetail } from '@ionic/core';
+import { Subscription } from 'rxjs';
 
 import { PlacesService } from '../places.service';
 import { Place } from '../place.model';
-import { Subscription } from 'rxjs';
-import { AuthService } from 'src/app/auth/auth.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
-    selector: 'app-discover',
-    templateUrl: './discover.page.html',
-    styleUrls: ['./discover.page.scss']
+  selector: 'app-discover',
+  templateUrl: './discover.page.html',
+  styleUrls: ['./discover.page.scss']
 })
 export class DiscoverPage implements OnInit, OnDestroy {
-    private _placeSubs: Subscription;
-    loadedPlaces: Place[];
-    listedLoadedPlaces: Place[];
-    relevantPlaces: Place[];
-    isLoading = false;
+  loadedPlaces: Place[];
+  listedLoadedPlaces: Place[];
+  relevantPlaces: Place[];
+  isLoading = false;
+  private placesSub: Subscription;
 
-    constructor(
-        private placesService: PlacesService,
-        private menuCtrl: MenuController,
-        private authService: AuthService
-    ) {}
+  constructor(
+    private placesService: PlacesService,
+    private menuCtrl: MenuController,
+    private authService: AuthService
+  ) {}
 
-    ngOnInit() {
-        this._placeSubs = this.placesService.places.subscribe(
-            (places: Place[]) => {
-                this.loadedPlaces = places;
-                this.relevantPlaces = this.loadedPlaces;
-                this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-            }
-        );
+  ngOnInit() {
+    this.placesSub = this.placesService.places.subscribe(places => {
+      this.loadedPlaces = places;
+      console.log('Service-ből ennyi adat jön át: ' + this.loadedPlaces.length);
+      this.relevantPlaces = this.loadedPlaces;
+      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+    });
+  }
+
+  ionViewWillEnter() {
+    this.isLoading = true;
+    this.placesService.fetchPlaces().subscribe(() => {
+      this.isLoading = false;
+    });
+  }
+
+  onOpenMenu() {
+    this.menuCtrl.toggle();
+  }
+
+  onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
+    if (event.detail.value === 'all') {
+      this.relevantPlaces = this.loadedPlaces;
+      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+      console.log('Bent az all-ban: ' + this.listedLoadedPlaces.length);
+    } else {
+      this.relevantPlaces = this.loadedPlaces.filter(
+        place => place.userId !== this.authService.userId
+      );
+      this.listedLoadedPlaces = this.relevantPlaces.slice(1);
+      console.log('Kint: ' + this.listedLoadedPlaces.length);
     }
+  }
 
-    ngOnDestroy() {
-        if (this._placeSubs) {
-            this._placeSubs.unsubscribe();
-        }
+  ngOnDestroy() {
+    if (this.placesSub) {
+      this.placesSub.unsubscribe();
     }
-
-    ionViewWillEnter() {
-        this.isLoading = true;
-        this.placesService.fetchPlaces().subscribe(() => {
-            this.isLoading = false;
-        });
-    }
-
-    onOpenMenu() {
-        this.menuCtrl.toggle();
-    }
-
-    onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
-        if (event.detail.value === 'all') {
-            this.relevantPlaces = this.loadedPlaces;
-            this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-        } else {
-            this.relevantPlaces = this.loadedPlaces.filter(
-                place => place.userId !== this.authService.userId
-            );
-            this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-        }
-    }
+  }
 }
