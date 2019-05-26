@@ -28,7 +28,6 @@ export class DiscoverPage implements OnInit, OnDestroy {
   ngOnInit() {
     this.placesSub = this.placesService.places.subscribe(places => {
       this.loadedPlaces = places;
-      console.log('Service-ből ennyi adat jön át: ' + this.loadedPlaces.length);
       this.relevantPlaces = this.loadedPlaces;
       this.listedLoadedPlaces = this.relevantPlaces.slice(1);
     });
@@ -49,13 +48,11 @@ export class DiscoverPage implements OnInit, OnDestroy {
     if (event.detail.value === 'all') {
       this.relevantPlaces = this.loadedPlaces;
       this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-      console.log('Bent az all-ban: ' + this.listedLoadedPlaces.length);
     } else {
       this.relevantPlaces = this.loadedPlaces.filter(
         place => place.userId !== this.authService.userId
       );
       this.listedLoadedPlaces = this.relevantPlaces.slice(1);
-      console.log('Kint: ' + this.listedLoadedPlaces.length);
     }
   }
 

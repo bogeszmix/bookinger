@@ -1,7 +1,8 @@
 {
   "name": "bookinger",
   "integrations": {
-    "cordova": {}
+    "cordova": {},
+    "capacitor": {}
   },
   "type": "angular"
 }

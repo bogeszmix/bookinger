@@ -22,6 +22,7 @@ gmap.ts
 .versions/
 coverage/
 www/
+android/
 node_modules/
 tmp/
 temp/
