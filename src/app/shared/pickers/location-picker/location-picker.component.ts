@@ -93,26 +93,30 @@ export class LocationPickerComponent implements OnInit {
   }
 
   private locateUser() {
-    if (!Capacitor.isPluginAvailable('GeoLocation')) {
+    if (!Capacitor.isPluginAvailable('Geolocation')) {
       this.showErrorAlert();
       return;
     }
 
+    this.isLoading = true;
     Plugins.Geolocation.getCurrentPosition().then(geoPosition => {
       const coordinates: Coordinates = {
         lat: geoPosition.coords.latitude,
         lng: geoPosition.coords.longitude
       };
       this.createPlace(coordinates.lat, coordinates.lng);
+      this.isLoading = false;
     }).catch(err => {
       this.showErrorAlert();
+      this.isLoading = false;
     });
   }
 
   private showErrorAlert() {
     this.alertCtrl.create({
       header: 'Could not fetch location',
-      message: 'Please use map instead!'
+      message: 'Please use map instead!',
+      buttons: ['Okay']
     }).then(alertEl => alertEl.present());
   }
 
