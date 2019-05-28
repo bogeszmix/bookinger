@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, from } from 'rxjs';
 import { User } from './user-model';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
+import { Plugins } from '@capacitor/core';
 
 export interface AuthResponseData {
   kind: string;
@@ -12,7 +13,7 @@ export interface AuthResponseData {
   refreshToken: string;
   expiresIn: string;
   localId: string;
-  registered?: string
+  registered?: string;
 }
 
 @Injectable({
@@ -25,7 +26,7 @@ export class AuthService {
     return this._user.asObservable().pipe(
       map(user => {
         if (user) {
-          !!user.token
+          return !!user.token;
         } else {
           return false;
         }
@@ -37,7 +38,7 @@ export class AuthService {
     return this._user.asObservable().pipe(
       map(user => {
         if (user) {
-          return user.id
+          return user.id;
         } else {
           return null;
         }
@@ -47,27 +48,99 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
+  autoLogin() {
+    return from(Plugins.Storage.get({key: 'authData'})).pipe(
+      map(storedData => {
+        if (!storedData || !storedData.value) {
+          return null;
+        }
+
+        const parsedData = JSON.parse(storedData.value) as {
+          userId: string,
+          token: string,
+          tokenExpirationDate: string,
+          email: string
+        };
+        const expirationDate = new Date(parsedData.tokenExpirationDate);
+        if (expirationDate <= new Date()) {
+          return null;
+        }
+
+        const user = new User(
+          parsedData.userId,
+          parsedData.email,
+          parsedData.token,
+          expirationDate
+        );
+
+        return user;
+      }),
+      tap(user => {
+        if (user) {
+          this._user.next(user);
+        }
+
+
+      }),
+      map(user => {
+        return !!user;
+      })
+    );
+  }
+
   signUp(email: string, password: string) {
-    return this.http.post<AuthResponseData>(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=${environment.firebaseAPIKey}`,
+    return this.http.post<AuthResponseData>(
+      `https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=${environment.firebaseAPIKey}`,
     {
       email: email,
       password: password,
       returnSecureToken: true
     }
+    ).pipe(
+      tap(userData => {
+        this.setUserData(userData);
+      })
     );
   }
 
   login(email: string, password: string) {
-    return this.http.post<AuthResponseData>(`https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${environment.firebaseAPIKey}`,
+    return this.http.post<AuthResponseData>(
+      `https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=${environment.firebaseAPIKey}`,
     {
       email: email,
       password: password,
       returnSecureToken: true
     }
+    ).pipe(
+      tap(userData => {
+        this.setUserData(userData);
+      })
     );
   }
 
   logout() {
     this._user.next(null);
+  }
+
+  setUserData(userData: AuthResponseData) {
+    const expirationTime = new Date(new Date().getTime() + (+userData.expiresIn * 1000));
+    this._user.next(new User(
+      userData.localId,
+      userData.email,
+      userData.idToken,
+      expirationTime
+    ));
+    this.storeAuthData(userData.localId, userData.idToken, expirationTime.toISOString(), userData.email);
+
+  }
+
+  storeAuthData(userId: string, token: string, tokenExpirationDate: string, email: string) {
+    const data = JSON.stringify({
+      userId: userId,
+      token: token,
+      tokenExpirationDate: tokenExpirationDate,
+      email: email
+    });
+    Plugins.Storage.set({key: 'authData', value: data});
   }
 }
