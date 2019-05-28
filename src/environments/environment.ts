@@ -3,10 +3,13 @@
 // The list of file replacements can be found in `angular.json`.
 
 import { maps } from '../gmap';
+import { firebase } from 'src/firebase';
 
 export const environment = {
   production: false,
-  gMapApiKey: maps.googleMapsKey
+  gMapApiKey: maps.googleMapsKey,
+  firebaseAPIKey: firebase.firebaseAPIKey
+
 };
 
 /*
