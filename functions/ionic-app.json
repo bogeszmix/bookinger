@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "bookinger-ionic-tutorial",
+  "private_key_id": "fcbaa263525ecfaef2dd3cb52b55095c96e416bc",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDTbBM2zpPjSpSg\n7kgOYe0x5W/+LQtyK7WkIkldk8AXSyBFsLZhJk4/zT8Y4ZsiVOC9ICTvdrrqgNT2\nUO2geHKprHC3fpMW13TN/OFzl3mVK7BJT8Pu1bGbnNO5sd3UE/FlkEXxH8c41fZF\nrBgAV+pjqPnxfKew0ii6Qmuz4z1d2yu3p5lQBpXNYo0tZpKtR2ffuUioooZ/DFMY\nWF79oCwL79W13JrDKe0nRV3y/oOUlLWVT5Optltonk4sPjqlzvBwaGTinbsjNlix\nmNFg1fyqhv7gvBARV2MEol87oVD2i47sndSphsi2Il45XFx1Mq5nKoTTssirD0IJ\n7nO/51BbAgMBAAECggEADHCsvsDm2lqy3SUBT/kM/BxDDhTluk2QiXxeIJ6HNVw9\ngNDWImhDY7eI6I/1Ps7UvHwgNxoNJ/TRHD87hDh9jiRwK3PeZaSaRqaWgS3Dd7/B\nIhBTrtzkyvkuS0Csy99yiN1HupBVeq+WApgzWsSs9l3Seyh5ol0X569/i90XMjlE\n3uh9/aSti1llME8r5TMgu2djv+I3Qa4ScixeIbyzNg2qdNFNf5ZYeVlfSvzq/rRv\nww2jlGkVAIT6P139uqQF9o3k09yIgehqkWl5hexitU7qDpWq2Q2MLTauN2Um5cLi\nLXMFUQgBx/63eFyPtE1wrEqsdoR9kAZxodlg1TcniQKBgQD14BNK3mUmUvFCsXnG\nKy5k5SoEjuD3pJaQXTMYmEV2Li1m77FsrFhhR/5/1/S+da/4iR+JvqipTK4szbQM\nz4YVTE9OKEuaTxUe8GK6u8Atq/oZ/Ogqw60BlNg3MchwXnNWaR5LIj1zXTZZ4yWS\n89PsVLoi5hq8Dl8c493cedVzaQKBgQDcIM7N4x8AlTR6gXo/9m3DWZ3nTE1W4xjM\nFHio4fG5TTALoI7OEsUUpMIK9EJf/yMNwoY7ix6FYICS9j/7LiT3oTx9ctAfvyR9\nV7riakEEcQLixTkSsAJ4ND7we3d4F/IP6RlMfzo8+otdj0CEkUKVXUkaU8QATkt6\njeM7chghIwKBgAcmlykMQsDUlLOt2a7LvrOsfoZXaW+KV96m9z913j9LpIJj4jMY\n6BEcOOia7UFExvNheYtWAi26Ty56ZQwiVPH1oDDTty8rsZ+OujBYGYS6hbGPy2jC\n/BsZqxgf2IZ8GLqgoALrYgIi6du/YW5erQEojalKK+jgOh/q+J7a5DxRAoGBAIoD\nv+XymsOAyRBuEbn8xcEPdSNKAcuSQz/hLe2lDCuEK7V+i0rFFe/lhQvdLaiGjPHZ\nntPCW/aAFN0Pq/nOarsfyo9U5wygiT5VPQUsXWttd8O6qBgBZur6xuN8ZeFUEh7L\npWMC+f61j5+va2IyuS5w+J6bGm6eqFBEmc3xsRNFAoGAdkxCci15U0ONUx775Gmm\nyPSO8tPgWet8jDDc90/SW0qKQJNiLuFNL49HCF44f6k8hgYH1SqFVhBogPfBQz8+\nKLRs5Aa/0DRtExxvsfbfXZnTAY4eGZQIFyhl2b2gui9fSrIklsleej0u6O1rQNLB\nNl325O8oqyqJ2xU31LugJXE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-8u9h8@bookinger-ionic-tutorial.iam.gserviceaccount.com",
+  "client_id": "116303621327942263210",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-8u9h8%40bookinger-ionic-tutorial.iam.gserviceaccount.com"
+}
