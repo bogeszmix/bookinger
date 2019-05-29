@@ -1,6 +1,6 @@
 {
-  "appId": "io.ionic.starter",
-  "appName": "bookinger",
+  "appId": "hu.bognaroliver.ionic.mobile.tutorial",
+  "appName": "Bookinger",
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "www"
